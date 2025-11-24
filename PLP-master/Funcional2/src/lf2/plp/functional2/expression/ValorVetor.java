@@ -22,6 +22,9 @@ public class ValorVetor implements Valor {
         return elementos;
     }
 
+    public List<Valor> getValores() {
+        return elementos;
+    }
 
     @Override
     public Valor avaliar(AmbienteExecucao amb)
@@ -65,6 +68,19 @@ public class ValorVetor implements Valor {
 
     @Override
     public String toString() {
-        return elementos.toString();
+        if (elementos.isEmpty()) {
+            return "<>";
+        }
+        
+        StringBuilder sb = new StringBuilder("<");
+        for (int i = 0; i < elementos.size(); i++) {
+            sb.append(elementos.get(i));
+            if (i < elementos.size() - 1) {
+                sb.append(",");
+            }
+        }
+        sb.append(">");
+        
+        return sb.toString();
     }
 }

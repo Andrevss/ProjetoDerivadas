@@ -18,6 +18,8 @@ import lf2.plp.functional2.expression.ValorFuncao;
 import lf2.plp.functional2.expression.ValorVetor;
 import lf2.plp.functional2.expression.ExpDeclaracao;
 import lf2.plp.functional2.expression.Aplicacao;
+import lf2.plp.functional2.expression.ExpDeriv;
+import lf2.plp.functional2.expression.ExpGradiente;
 //Imports da Funcional1
 import lf2.plp.functional1.declaration.DeclaracaoFuncional;
 import lf2.plp.functional1.declaration.DecVariavel;
@@ -174,12 +176,7 @@ TOKEN : /* TOKENS DE FUNCIONAL 2 */
   < AND : "and" >
 | < DERIVE : "derive" > // Implementação da derivada simbólica
 | < BY : "by" >
-| < GRAD : "grad" >
-/*
-| < EVAL : "eval" >
-| < ZEROS : "zeros" >
-| < EXTREMOS : "extremos" > 
-*/
+| < GRAD : "grad" > // Implementação do gradiente
 | < OR : "or" >
 | < NOT : "not" >
 | < LENGTH : "length" >
@@ -498,26 +495,26 @@ Expressao PAplicacao() :
   }
 }
 
-List PListaId() :
+List PListaIdSemVirgula() :
 {
-  List retorno = null;
+  List<Id> retorno = new ArrayList<Id>();
   Id id;
 }
 {
-  (
-    id = PId()
-    {
-      if (retorno == null)
-      {
-        retorno = new ArrayList();
-        retorno.add(id);
-      }
-      else
-      {
-        retorno.add(id);
-      }
-    }
-  )+
+  (id = PId() { retorno.add(id); })+  // Um ou mais IDs SEM vírgula
+  {
+    return retorno;
+  }
+}
+
+List PListaId() :
+{
+  List<Id> retorno = new ArrayList<Id>();
+  Id id;
+}
+{
+  id = PId() { retorno.add(id); }
+  ( "," id = PId() { retorno.add(id); } )*  // Vírgula entre os IDs!
   {
     return retorno;
   }
@@ -542,12 +539,12 @@ DeclaracaoFuncional PDeclFuncao() :
 {
   Id id;
   Expressao expressao;
-  DeclaracaoFuncional retorno;
   List lista;
 }
 {
   (
-    < FUNC > id = PId() lista = PListaId() < ASSIGN > expressao = PExpressao()
+    < FUNC > id = PId() lista = PListaIdSemVirgula() < ASSIGN > expressao = PExpressao()
+                                   
   )
   {
     return new DecFuncao(id, new ValorFuncao(lista, expressao));
@@ -625,55 +622,18 @@ Expressao PExpDerivada() :
     return new ExpDeriv(expressao, variavel);
   }
 }
-/*
+
 Expressao PExpGradiente() :
 {
   Expressao expressao;
+  List<Id> vars;
 }
 {
-  <GRAD> "(" expressao = PExpressao() "," vars = PListaVariaveis() ")"
-{
-   return new ExpGradiente(expressao, vars);
-}
-}
-
-/*
-AvaliacaoNumerica ExpAvaliacaoNumerica() :
-{
-  Expressao expr;
-  List atribs;
-}
-{
-  <EVAL> "(" expr=PExpressao() "," atribs=PListaAtribuicoes() ")"
+  <GRAD> expressao = PExpressao() <BY> vars = PListaVariaveis()
   {
-    return new AvaliacaoNumerica(expr, atribs);
+    return new ExpGradiente(expressao, vars);
   }
 }
-
-ZerosFuncao ExpZerosFuncao() :
-{
-    Expressao expr;
-    Id id;
-}
-{
-    <ZEROS> "(" expr=Expressao() "," id=Id() ")"
-    {
-        return new ZerosFuncao(expr, id);
-    }
-}
-
-Expressao PExtremosLocais() :
-{
-  Expressao expr;
-  List vars;
-}
-{
-  <EXTREMA> "(" expr = PExpressao() "," vars = PListaVariaveis() ")"
-  {
-    return new ExpExtremosLocais(expr, vars);
-  }
-}
-*/
 
 List PListaExpr() :
 {
@@ -698,49 +658,6 @@ List PListaExpr() :
     return retorno;
   }
 }
-
-//new rules for assignment and lists of assignments and variables
-/*
-Atribuicao PAtribuicao() :
-{
-  Id id;
-  Expressao expr;
-}
-{
-  id = PId() <IGUAL> expr = PExpressao()
-  {
-    return new Atribuicao(id, expr);
-  }
-}
-
-List PListaAtribuicoes() :
-{
-  List retorno = null;
-  Atribuicao atrib;
-}
-{
-  "["
-
-    atrib = PAtribuicao()
-    {
-      retorno = new ArrayList();
-      retorno.add(atrib);
-    }
-
-    (
-      < COMMA > atrib = PAtribuicao()
-      {
-        retorno.add(atrib);
-      }
-    )*
-
-  "]"
-  {
-    return retorno;
-  }
-}
-
-*/
 
 List PListaVariaveis() :
 {
@@ -768,21 +685,17 @@ Expressao PExpUnaria() :
     LOOKAHEAD(PExpLength())
     retorno = PExpLength()
   | 
-    LOOKAHEAD(PExpDeclaracao())
+    LOOKAHEAD(<LET>)
     retorno = PExpDeclaracao()
-  |
-  //new lookaheads for derivada and gradiente
-  //   LOOKAHEAD(PExpDerivada())
-  //   retorno = PExpDerivada()
-  // |
-  //   LOOKAHEAD(PExpGradiente())
-  //   retorno = PExpGradiente()
-  // |
-    LOOKAHEAD(PExpCondicional())
-    retorno = PExpCondicional()
   |
     LOOKAHEAD(<DERIVE>)
     retorno = PExpDerivada()
+  |
+    LOOKAHEAD(<GRAD>)  // ← SIMPLIFIQUE PARA SÓ O TOKEN
+    retorno = PExpGradiente()
+  |
+    LOOKAHEAD(PExpCondicional())
+    retorno = PExpCondicional()
   | 
     LOOKAHEAD(PExpPrimaria())
     retorno = PExpPrimaria()
@@ -837,11 +750,6 @@ Expressao PExpBinaria2() :
       {
         retorno = new ExpSub(retorno, param2);
       }
-    |
-      < STAR > param2 = PExpBinaria3() // <--- Inicialmente não existia a operação de multiplicação
-      {
-        retorno = new ExpMult(retorno, param2);
-      }
     | 
       < OR > param2 = PExpBinaria3()
       {
@@ -867,9 +775,9 @@ Expressao PExpBinaria3() :
 }
 {
   (
-    retorno = PExpUnaria()
+    retorno = PExpMult()
     (
-      < AND > param2 = PExpUnaria()
+      < AND > param2 = PExpMult()
       {
         retorno = new ExpAnd(retorno, param2);
       }

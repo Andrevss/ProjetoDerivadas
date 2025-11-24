@@ -1,4 +1,5 @@
 package lf2.plp.functional2.expression;
+
 import java.util.ArrayList;
 import java.util.List;
 import lf2.plp.expressions2.expression.Expressao;
@@ -27,36 +28,46 @@ public class ExpGradiente implements Expressao {
 
     @Override
     public Valor avaliar(AmbienteExecucao amb)
-        throws VariavelNaoDeclaradaException, VariavelJaDeclaradaException {
+            throws VariavelNaoDeclaradaException, VariavelJaDeclaradaException {
 
         List<Valor> derivadas = new ArrayList<>();
 
         for (Id var : variaveis) {
-            Expressao derivada = new ExpDeriv(funcao, var); // sua classe existente
-            Valor v = derivada.avaliar(amb);
-            derivadas.add(v);
+
+            // Calcula a derivada simbólica
+            Expressao derivada = new ExpDeriv(funcao, var);
+            Valor valorDerivada = derivada.avaliar(amb);
+
+            Valor resultadoFinal;
+
+            // Caso a derivada retorne uma função, avalia o corpo
+            if (valorDerivada instanceof ValorFuncao) {
+                ValorFuncao funcaoDerivada = (ValorFuncao) valorDerivada;
+                resultadoFinal = funcaoDerivada.getCorpo().avaliar(amb);
+            } else {
+                resultadoFinal = valorDerivada;
+            }
+
+            // Print limpo: dx = valor
+            System.out.println(var + " = " + resultadoFinal);
+
+            derivadas.add(resultadoFinal);
         }
 
-        return new ValorVetor(derivadas);
+        ValorVetor gradiente = new ValorVetor(derivadas);
+
+        // Print final do gradiente
+        System.out.println("<df/dx, df/dy> = " + gradiente);
+
+        return gradiente;
     }
 
     @Override
     public boolean checaTipo(AmbienteCompilacao amb)
-        throws VariavelNaoDeclaradaException, VariavelJaDeclaradaException {
+            throws VariavelNaoDeclaradaException, VariavelJaDeclaradaException {
 
-        // A função precisa ter tipo válido
-        if (!funcao.checaTipo(amb)) {
-            return false;
-        }
-
-        Tipo tipoFunc = funcao.getTipo(amb);
-
-        // As variáveis devem ser válidas (tipicamente inteiros)
-        if (!(tipoFunc instanceof TipoVetor)) {
-        // se quiser permitir outras coisas, ajuste aqui
-        return false;
-    }
-        return true;
+        // Só verificar que a expressão é válida — qualquer tipo de função é aceitável
+        return funcao.checaTipo(amb);
     }
 
     @Override
@@ -74,5 +85,3 @@ public class ExpGradiente implements Expressao {
         return new ExpGradiente(funcao.clone(), List.copyOf(variaveis));
     }
 }
-
-

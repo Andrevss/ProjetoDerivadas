@@ -1,6 +1,2 @@
-/*let
-  var x    =  "x",
-  var f    = 2 * (x * x) + x + 1,
-  var dfdx = derive f by x
-in
-  dfdx*/
+let var x = 1 in let var y = 2 in 
+let fun f x y = 2 * x * x + 3 * x * y + y * y in grad f by [x, y]
