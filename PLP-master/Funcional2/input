@@ -1,2 +1,23 @@
-let var x = 1 in let var y = 2 in 
-let fun f x y = 2 * x * x + 3 * x * y + y * y in grad f by [x, y]
+//Exemplo de uso do gradiente em 1 dimensão
+//let var x = 4 in 
+//grad (x * x) by [x]
+
+//Exemplo de uso do gradiente em 2 dimensões
+//let var x = 3 in let var y = 4 in 
+//grad (x * x + y * y) by [x, y]
+
+//Exemplo de uso do gradiente em 3 dimensões
+//let var x = 1 in let var y = 2 in let var z = 3 in 
+//grad (2 * x + 3 * y + 4 * z) by [x, y, z]
+
+//Exemplo de uso do gradiente em 3 dimensões com expressão mais complexa
+//let var x = 2 in let var y = 3 in let var z = 1 in 
+//grad (x * x - y * y + z * z + 2 * x * y - x * z + y * z) by [x, y, z]
+
+// f(x,y,z) = 3x² + 2*y² + z³
+    
+//let fun f x y z = (3 * x * x) + (2 * y * y) + (z * z * z) in derive f by z
+
+//derive x*x*y + 2*x + y by x
+
+let fun f x y = derive x*x + y*x + y by x in f(3,2)
