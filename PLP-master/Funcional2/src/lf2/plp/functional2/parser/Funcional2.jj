@@ -691,7 +691,7 @@ Expressao PExpUnaria() :
     LOOKAHEAD(<DERIVE>)
     retorno = PExpDerivada()
   |
-    LOOKAHEAD(<GRAD>)  // ← SIMPLIFIQUE PARA SÓ O TOKEN
+    LOOKAHEAD(<GRAD>)  
     retorno = PExpGradiente()
   |
     LOOKAHEAD(PExpCondicional())
@@ -788,8 +788,7 @@ Expressao PExpBinaria3() :
     return retorno;
   }
 }
-// ********************************************************
-// Adicionei aqui a regra para multiplicação
+
 Expressao PExpMult() :
 {
   Expressao retorno, param2;

@@ -57,7 +57,7 @@ public class ExpGradiente implements Expressao {
         ValorVetor gradiente = new ValorVetor(derivadas);
 
         // Print final do gradiente
-        System.out.println("<df/dx, df/dy> = " + gradiente);
+        System.out.println("Vf = " + gradiente);
 
         return gradiente;
     }
